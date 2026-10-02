@@ -1,7 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const app = express();
 const port = 3000;
-require('dotenv').config();
+
 //importing routes
 const path = require('path');
 const cors = require('cors');
@@ -9,6 +10,7 @@ const cors = require('cors');
 const loginRoute = require('./routes/loginRoute');
 const signUpRoute = require('./routes/signUpRoute');
 const dashboardRoute = require('./routes/dashboardRoute');
+const paymentRoute = require('./routes/paymentRoute');
 //data base 
 const sequelize = require('./utils/db-connection');
 
@@ -23,6 +25,7 @@ require("./models/userAndExpensesAssociation.js");
 //SignUp routes
 app.use('/user', signUpRoute);
 app.use('/dashboard', dashboardRoute);
+app.use('/payment', paymentRoute); 
 
 //Login routes
 
