@@ -1,6 +1,12 @@
+
 const { Cashfree, CFEnvironment } = require("cashfree-pg");
 const User = require("../models/signUpModel");
 const path = require("path");
+
+
+// ===============================
+// CASHFREE CONFIGURATION
+// ===============================
 
 const cashfree = new Cashfree(
     CFEnvironment.SANDBOX,
@@ -9,21 +15,36 @@ const cashfree = new Cashfree(
 );
 
 
-// PAYMENT PAGE
-const getPaymentPage = (req, res) => {
+// ===============================
+// PAYMENT PAGE - GET
+// ===============================
 
-    res.sendFile(
-        path.join(
-            __dirname,
-            "../../Frontend/paymentPage/payment.html"
-        )
-    );
+const getPaymentPage = async (req, res) => {
 
+    try {
+
+        return res.sendFile(
+            path.join(
+                __dirname,
+                "../../Frontend/paymentPage/payment.html"
+            )
+        );
+
+    } catch (error) {
+
+        console.error("Error loading payment page:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Unable to load payment page"
+        });
+    }
 };
 
 
 // ===============================
 // CREATE CASHFREE PAYMENT ORDER
+// POST
 // ===============================
 
 const processPayment = async (req, res) => {
@@ -38,7 +59,10 @@ const processPayment = async (req, res) => {
         } = req.body;
 
 
-        // Basic validation
+        // ===============================
+        // BASIC VALIDATION
+        // ===============================
+
         if (
             !amount ||
             !customerName ||
@@ -50,17 +74,23 @@ const processPayment = async (req, res) => {
                 success: false,
                 message: "All payment details are required"
             });
-
         }
 
 
-        // Generate unique order ID
+        // ===============================
+        // GENERATE UNIQUE ORDER ID
+        // ===============================
+
         const orderId =
             "expense_" +
             Date.now() +
             "_" +
             Math.floor(Math.random() * 10000);
 
+
+        // ===============================
+        // CASHFREE ORDER REQUEST
+        // ===============================
 
         const request = {
 
@@ -70,45 +100,48 @@ const processPayment = async (req, res) => {
 
             order_id: orderId,
 
-
             customer_details: {
 
-                customer_id: "customer_" + Date.now(),
+                customer_id:
+                    "customer_" + Date.now(),
 
-                customer_name: customerName,
+                customer_name:
+                    customerName,
 
-                customer_email: customerEmail,
+                customer_email:
+                    customerEmail,
 
-                customer_phone: customerPhone
-
+                customer_phone:
+                    customerPhone
             },
-
 
             order_meta: {
 
                 return_url:
                     `http://localhost:3000/payment/success?order_id=${orderId}`
-
             }
-
         };
 
 
         console.log("Creating Cashfree order...");
-
         console.log(request);
 
 
-        // Create order in Cashfree
+        // ===============================
+        // CREATE ORDER IN CASHFREE
+        // ===============================
+
         const response =
             await cashfree.PGCreateOrder(request);
 
 
         console.log("Cashfree response:");
-
         console.log(response.data);
 
 
+        // ===============================
+        // SEND RESPONSE
+        // ===============================
 
         return res.status(200).json({
 
@@ -118,7 +151,6 @@ const processPayment = async (req, res) => {
 
             paymentSessionId:
                 response.data.payment_session_id
-
         });
 
 
@@ -137,29 +169,32 @@ const processPayment = async (req, res) => {
 
             success: false,
 
-            message: "Unable to create Cashfree order",
+            message:
+                "Unable to create Cashfree order",
 
             error:
                 error.response?.data ||
                 error.message
-
         });
-
     }
-
 };
 
 
 // ===============================
 // CHECK PAYMENT STATUS
+// GET
 // ===============================
 
 const getPaymentStatus = async (req, res) => {
 
     try {
 
-        const orderId = req.params.orderId;
+        const { orderId } = req.params;
 
+
+        // ===============================
+        // VALIDATE ORDER ID
+        // ===============================
 
         if (!orderId) {
 
@@ -167,24 +202,24 @@ const getPaymentStatus = async (req, res) => {
 
                 success: false,
 
-                message: "Order ID is required"
-
+                message:
+                    "Order ID is required"
             });
-
         }
 
 
-        // Fetch order from Cashfree
+        // ===============================
+        // FETCH ORDER FROM CASHFREE
+        // ===============================
+
         const response =
             await cashfree.PGFetchOrder(orderId);
 
 
         console.log("Order status:");
-
         console.log(response.data);
 
 
-        // Cashfree payment status
         const orderStatus =
             response.data.order_status;
 
@@ -195,21 +230,25 @@ const getPaymentStatus = async (req, res) => {
         );
 
 
-
+        // ===============================
         // PAYMENT SUCCESS
-
+        // ===============================
 
         if (orderStatus === "PAID") {
 
 
-            // Get logged-in user
-            const user = await User.findOne({
+            // ===============================
+            // GET LOGGED-IN USER
+            // ===============================
 
-                where: {
-                    email: req.user.email
-                }
+            const user =
+                await User.findOne({
 
-            });
+                    where: {
+                        email: req.user.email
+                    }
+
+                });
 
 
             if (!user) {
@@ -218,16 +257,15 @@ const getPaymentStatus = async (req, res) => {
 
                     success: false,
 
-                    message: "User not found"
-
+                    message:
+                        "User not found"
                 });
-
             }
 
 
-            // ===================================
+            // ===============================
             // MAKE USER PREMIUM
-            // ===================================
+            // ===============================
 
             if (!user.isPremium) {
 
@@ -235,44 +273,49 @@ const getPaymentStatus = async (req, res) => {
 
                 await user.save();
 
+
                 console.log(
                     `User ${user.email} is now Premium`
                 );
-
             }
 
+
+            // ===============================
+            // SUCCESS RESPONSE
+            // ===============================
 
             return res.status(200).json({
 
                 success: true,
 
-                message: "Payment successful. User is now Premium.",
+                message:
+                    "Payment successful. User is now Premium.",
 
                 isPremium: true,
 
                 order: response.data
-
             });
-
         }
 
 
-        // ===================================
+        // ===============================
         // PAYMENT NOT SUCCESSFUL
-        // ===================================
+        // ===============================
 
         return res.status(200).json({
 
             success: false,
 
-            message: "Payment is not completed",
+            message:
+                "Payment is not completed",
 
             isPremium: false,
 
-            orderStatus: orderStatus,
+            orderStatus:
+                orderStatus,
 
-            order: response.data
-
+            order:
+                response.data
         });
 
 
@@ -291,37 +334,36 @@ const getPaymentStatus = async (req, res) => {
 
             success: false,
 
-            message: "Unable to fetch order",
+            message:
+                "Unable to fetch order",
 
             error:
                 error.response?.data ||
                 error.message
-
         });
-
     }
-
 };
 
 
-
+// ===============================
 // PAYMENT SUCCESS PAGE
-
+// GET
+// ===============================
 
 const getPaymentSuccess = async (req, res) => {
 
     try {
 
-        const orderId = req.query.order_id;
+        const { order_id } = req.query;
 
 
         console.log(
             "Payment success page for order:",
-            orderId
+            order_id
         );
 
 
-        res.sendFile(
+        return res.sendFile(
 
             path.join(
                 __dirname,
@@ -330,19 +372,25 @@ const getPaymentSuccess = async (req, res) => {
 
         );
 
+
     } catch (error) {
 
-        console.error(error);
-
-        res.status(500).send(
-            "Unable to open payment success page"
+        console.error(
+            "Error loading payment success page:",
+            error
         );
 
-    }
 
+        return res.status(500).send(
+            "Unable to open payment success page"
+        );
+    }
 };
 
 
+// ===============================
+// EXPORT
+// ===============================
 
 module.exports = {
 
@@ -355,3 +403,4 @@ module.exports = {
     getPaymentSuccess
 
 };
+
