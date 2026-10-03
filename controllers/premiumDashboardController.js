@@ -3,6 +3,7 @@ const Expense = require('../models/dashboardModel');
 const User = require('../models/signUpModel');
 const sequelize = require('../utils/db-connection');
 const path = require('path');
+const { suggestCategory } = require('../services/aiService');
 
 
 // Premium Dashboard
@@ -18,10 +19,13 @@ const addExpense = async (req, res) => {
     try {
         const { amount, description, category } = req.body;
 
+        // Use AI to suggest category if not provided
+        const finalCategory = category || await suggestCategory(description);
+
         const expense = await Expense.create({
             amount,
             description,
-            category,
+            category: finalCategory,
             UserId: req.userId
         });
 

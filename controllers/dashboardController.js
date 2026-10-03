@@ -1,6 +1,7 @@
 const Expense = require('../models/dashboardModel');
 const User = require('../models/signUpModel');
 const path = require('path');
+const { suggestCategory } = require('../services/aiService');
 
 
 const addExpense = async (req, res) => {
@@ -10,8 +11,10 @@ const addExpense = async (req, res) => {
         const { amount, description, category } = req.body;
         console.log("Received expense data:", { amount, description, category, userId: req.userId });
 
+        // Use AI to suggest category if not provided
+        const finalCategory = category || await suggestCategory(description);
 
-        const expense = await Expense.create({ amount, description, category, UserId: req.userId });
+        const expense = await Expense.create({ amount, description, category: finalCategory, UserId: req.userId });
         console.log("Expense created:", expense);
 
         // Increment user's totalExpenses
