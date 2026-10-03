@@ -42,7 +42,8 @@ const userLogin = async (req, res) => {
         return res.status(200).json({
             message: "Login successful",
             token,
-            userName: user.name
+            userName: user.name,
+            isPremium: user.isPremium
         });
 
     } catch (error) {

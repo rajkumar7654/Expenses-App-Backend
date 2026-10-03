@@ -1,6 +1,7 @@
 const Expense = require('../models/dashboardModel');
+const User = require('../models/signUpModel');
 const path = require('path');
-
+const { Op } = require('sequelize');
 
 const addExpense = async (req, res) => {
 
@@ -26,7 +27,7 @@ const addExpense = async (req, res) => {
 
 const getDashboard = async (req, res) => {
     return res.sendFile(
-        path.join(__dirname, "../../Frontend/dashboard.html")
+        path.join(__dirname, "../../Frontend/premium-dashboard.html")
     );
 };
 
@@ -116,6 +117,36 @@ const updateExpense = async (req, res) => {
 
 
 
+const getLeaderboard = async (req, res) => {
+    try {
+        console.log("Fetching leaderboard data...");
+        const expenses = await Expense.findAll({
+            include: [{
+                model: User,
+                attributes: ['name']
+            }],
+            order: [['amount', 'DESC']]
+        });
+        console.log("Leaderboard expenses found:", expenses);
+
+        const leaderboard = expenses.map(expense => ({
+            id: expense.id,
+            description: expense.description,
+            category: expense.category,
+            amount: expense.amount,
+            userName: expense.User ? expense.User.name : 'Unknown'
+        }));
+
+        console.log("Leaderboard data prepared:", leaderboard);
+        res.status(200).json(leaderboard);
+    } catch (error) {
+        console.error("Error fetching leaderboard:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+
+
 module.exports = {
 
     addExpense,
@@ -126,6 +157,8 @@ module.exports = {
 
     deleteExpense,
 
-    updateExpense
+    updateExpense,
+
+    getLeaderboard
 
 };
