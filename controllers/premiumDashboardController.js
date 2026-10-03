@@ -25,6 +25,12 @@ const addExpense = async (req, res) => {
             UserId: req.userId
         });
 
+        // Increment user's totalExpenses
+        await User.increment('totalExpenses', {
+            by: parseFloat(amount),
+            where: { id: req.userId }
+        });
+
         res.status(201).json(expense);
 
     } catch (error) {
@@ -67,6 +73,20 @@ const updateExpense = async (req, res) => {
             category
         } = req.body;
 
+        // Get old expense before updating
+        const oldExpense = await Expense.findOne({
+            where: {
+                id: id,
+                UserId: req.userId
+            }
+        });
+
+        if (!oldExpense) {
+            return res.status(404).json({
+                message: "Expense not found"
+            });
+        }
+
         const [updatedRows] = await Expense.update(
             {
                 amount,
@@ -86,6 +106,13 @@ const updateExpense = async (req, res) => {
                 message: "Expense not found"
             });
         }
+
+        // Adjust user's totalExpenses by the difference
+        const difference = parseFloat(amount) - parseFloat(oldExpense.amount);
+        await User.increment('totalExpenses', {
+            by: difference,
+            where: { id: req.userId }
+        });
 
         const updatedExpense = await Expense.findOne({
             where: {
@@ -110,6 +137,20 @@ const deleteExpense = async (req, res) => {
     try {
         const { id } = req.params;
 
+        // Get expense amount before deleting
+        const expense = await Expense.findOne({
+            where: {
+                id: id,
+                UserId: req.userId
+            }
+        });
+
+        if (!expense) {
+            return res.status(404).json({
+                message: "Expense not found"
+            });
+        }
+
         const deletedRows = await Expense.destroy({
             where: {
                 id: id,
@@ -122,6 +163,12 @@ const deleteExpense = async (req, res) => {
                 message: "Expense not found"
             });
         }
+
+        // Decrement user's totalExpenses
+        await User.decrement('totalExpenses', {
+            by: parseFloat(expense.amount),
+            where: { id: req.userId }
+        });
 
         res.status(200).json({
             message: "Expense deleted successfully"
@@ -139,65 +186,25 @@ const deleteExpense = async (req, res) => {
 // Leaderboard
 const getLeaderboard = async (req, res) => {
     try {
-        const leaderboard = await userAggregateExpenses();
+        const leaderboard = await User.findAll({
+            attributes: ['name', 'totalExpenses'],
+            order: [
+                ['totalExpenses', 'DESC']
+            ]
+        });
 
-        res.status(200).json(leaderboard);
+        const formattedLeaderboard = leaderboard.map(user => ({
+            name: user.name,
+            total_cost: user.totalExpenses
+        }));
+
+        res.status(200).json(formattedLeaderboard);
 
     } catch (error) {
         console.error(error);
         res.status(500).json({
             message: error.message
         });
-    }
-};
-
-
-// Aggregate Expenses
-const userAggregateExpenses = async () => {
-    try {
-        const expenses = await Expense.findAll({
-            attributes: [
-                'UserId',
-                [
-                    sequelize.fn(
-                        'SUM',
-                        sequelize.col('amount')
-                    ),
-                    'total_cost'
-                ]
-            ],
-            group: ['UserId'],
-            order: [
-                [
-                    sequelize.fn(
-                        'SUM',
-                        sequelize.col('amount')
-                    ),
-                    'DESC'
-                ]
-            ]
-        });
-
-        const userLeaderBoardDetails = [];
-
-        for (const element of expenses) {
-            const user = await User.findOne({
-                where: {
-                    id: element.UserId
-                }
-            });
-
-            userLeaderBoardDetails.push({
-                name: user.name,
-                total_cost: element.dataValues.total_cost
-            });
-        }
-
-        return userLeaderBoardDetails;
-
-    } catch (error) {
-        console.error(error);
-        throw error;
     }
 };
 

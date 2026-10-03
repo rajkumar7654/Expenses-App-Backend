@@ -74,7 +74,34 @@ app.use('/user', loginRoute);
 
 
 
-sequelize.sync({ force: false }).then(() => {
+sequelize.sync({ alter: true }).then(async () => {
+
+    // Update existing users' totalExpenses on startup
+    try {
+        const users = await User.findAll({
+            where: {
+                totalExpenses: 0
+            }
+        });
+
+        for (const user of users) {
+            const expenses = await Expense.findAll({
+                where: { UserId: user.id },
+                attributes: [
+                    [sequelize.fn('SUM', sequelize.col('amount')), 'total']
+                ]
+            });
+
+            const total = expenses[0]?.dataValues.total || 0;
+
+            if (total > 0) {
+                await user.update({ totalExpenses: total });
+                console.log(`Updated ${user.name}'s totalExpenses to ₹${total}`);
+            }
+        }
+    } catch (error) {
+        console.error('Error updating totalExpenses on startup:', error);
+    }
 
     app.listen(port, () => {
 
