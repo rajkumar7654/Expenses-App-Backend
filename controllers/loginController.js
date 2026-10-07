@@ -11,13 +11,8 @@ const userLogin = async (req, res) => {
 
         const { email, password } = req.body;
 
-
         // Find user by email
-        const user = await User.findOne({
-            where: {
-                email
-            }
-        });
+        const user = await User.findOne({ where: { email } });
 
 
         // User not found
@@ -30,10 +25,7 @@ const userLogin = async (req, res) => {
 
 
         // Check password
-        const isPasswordValid = await bcrypt.compare(
-            password,
-            user.password
-        );
+        const isPasswordValid = await bcrypt.compare(password, user.password);
 
 
         // Password incorrect

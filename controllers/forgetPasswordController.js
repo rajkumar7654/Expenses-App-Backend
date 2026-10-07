@@ -106,15 +106,9 @@ const updatePassword = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        await User.update(
-            { password: hashedPassword },
-            { where: { id: forgotPasswordRequest.UserId } }
-        );
+        await User.update({ password: hashedPassword }, { where: { id: forgotPasswordRequest.UserId } });
 
-        await ForgotPasswordRequest.update(
-            { isActive: false },
-            { where: { id } }
-        );
+        await ForgotPasswordRequest.update({ isActive: false }, { where: { id } });
 
         res.status(200).json({ message: 'Password updated successfully' });
     } catch (error) {

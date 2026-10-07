@@ -7,20 +7,14 @@ const { suggestCategory } = require('../services/aiService');
 const { downloadReport: generatePDF } = require('../services/downloadReportDesign');
 
 
-// ===============================
-// Premium Dashboard - GET
-// No transaction
-// ===============================
 
+// Premium Dashboard - GET
 const getDashboard = async (req, res) => {
 
     try {
 
         return res.sendFile(
-            path.join(
-                __dirname,
-                '../../Frontend/premium-dashboard.html'
-            )
+            path.join(__dirname, '../../Frontend/premium-dashboard.html')
         );
 
     } catch (error) {
@@ -34,28 +28,18 @@ const getDashboard = async (req, res) => {
 };
 
 
-// ===============================
 // Add Expense - POST
-// Transaction
-// ===============================
-
 const addExpense = async (req, res) => {
 
     const transaction = await sequelize.transaction();
 
     try {
 
-        const {
-            amount,
-            description,
-            category
-        } = req.body;
+        const {amount, description, category} = req.body;
 
 
         // Use AI to suggest category if category is not provided
-        const finalCategory =
-            category || await suggestCategory(description);
-
+        const finalCategory = category || await suggestCategory(description);
 
         // Create expense
         const expense = await Expense.create(
@@ -72,8 +56,7 @@ const addExpense = async (req, res) => {
 
 
         // Increment user's totalExpenses
-        await User.increment(
-            'totalExpenses',
+        await User.increment('totalExpenses',
             {
                 by: parseFloat(amount),
                 where: {
@@ -86,7 +69,6 @@ const addExpense = async (req, res) => {
 
         // Commit transaction
         await transaction.commit();
-
 
         return res.status(201).json(expense);
 
@@ -105,11 +87,7 @@ const addExpense = async (req, res) => {
 };
 
 
-// ===============================
 // Get Expenses - GET
-// No transaction
-// ===============================
-
 const getExpensesByUserId = async (req, res) => {
 
     try {
@@ -137,11 +115,7 @@ const getExpensesByUserId = async (req, res) => {
 };
 
 
-// ===============================
 // Update Expense - PUT
-// Transaction
-// ===============================
-
 const updateExpense = async (req, res) => {
 
     const transaction = await sequelize.transaction();
@@ -150,11 +124,7 @@ const updateExpense = async (req, res) => {
 
         const { id } = req.params;
 
-        const {
-            amount,
-            description,
-            category
-        } = req.body;
+        const {amount, description, category} = req.body;
 
 
         // Get old expense
@@ -175,9 +145,7 @@ const updateExpense = async (req, res) => {
 
             await transaction.rollback();
 
-            return res.status(404).json({
-                message: "Expense not found"
-            });
+            return res.status(404).json({message: "Expense not found"});
         }
 
 
@@ -206,9 +174,7 @@ const updateExpense = async (req, res) => {
 
             await transaction.rollback();
 
-            return res.status(404).json({
-                message: "Expense not found"
-            });
+            return res.status(404).json({message: "Expense not found"});
         }
 
 
@@ -299,9 +265,7 @@ const deleteExpense = async (req, res) => {
 
             await transaction.rollback();
 
-            return res.status(404).json({
-                message: "Expense not found"
-            });
+            return res.status(404).json({message: "Expense not found"});
         }
 
 
@@ -348,9 +312,7 @@ const deleteExpense = async (req, res) => {
         await transaction.commit();
 
 
-        return res.status(200).json({
-            message: "Expense deleted successfully"
-        });
+        return res.status(200).json({message: "Expense deleted successfully"});
 
 
     } catch (error) {
@@ -367,11 +329,7 @@ const deleteExpense = async (req, res) => {
 };
 
 
-// ===============================
 // Leaderboard - GET
-// No transaction
-// ===============================
-
 const getLeaderboard = async (req, res) => {
 
     try {
@@ -391,8 +349,7 @@ const getLeaderboard = async (req, res) => {
 
 
         // Format leaderboard
-        const formattedLeaderboard =
-            leaderboard.map(user => ({
+        const formattedLeaderboard = leaderboard.map(user => ({
 
                 name: user.name,
 
@@ -419,9 +376,7 @@ const downloadReport = async (req, res) => {
 };
 
 
-// ===============================
 // EXPORT
-// ===============================
 
 module.exports = {
 

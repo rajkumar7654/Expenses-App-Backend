@@ -6,10 +6,8 @@ const { suggestCategory } = require('../services/aiService');
 const sequelize = require('../utils/db-connection');
 
 
-// =========================
-// ADD EXPENSE
-// =========================
 
+// ADD EXPENSE
 const addExpense = async (req, res) => {
 
     const transaction = await sequelize.transaction();
@@ -26,21 +24,17 @@ const addExpense = async (req, res) => {
         });
 
         // Use AI to suggest category if category is not provided
-        const finalCategory =
-            category || await suggestCategory(description);
+        const finalCategory = category || await suggestCategory(description);
 
         // Create expense
-        const expense = await Expense.create(
-            {
-                amount,
-                description,
-                category: finalCategory,
-                UserId: req.userId
-            },
-            {
-                transaction
-            }
-        );
+        const expense = await Expense.create({
+            amount,
+            description,
+            category: finalCategory,
+            UserId: req.userId
+        }, {
+            transaction
+        });
 
         console.log("Expense created:", expense);
 
@@ -72,10 +66,7 @@ const addExpense = async (req, res) => {
 };
 
 
-// =========================
 // GET DASHBOARD
-// =========================
-
 const getDashboard = async (req, res) => {
 
     return res.sendFile(
@@ -85,10 +76,7 @@ const getDashboard = async (req, res) => {
 };
 
 
-// =========================
 // GET EXPENSES BY USER
-// =========================
-
 const getExpensesByUserId = async (req, res) => {
 
     try {
@@ -116,10 +104,8 @@ const getExpensesByUserId = async (req, res) => {
 };
 
 
-// =========================
-// DELETE EXPENSE
-// =========================
 
+// DELETE EXPENSE
 const deleteExpense = async (req, res) => {
 
     const transaction = await sequelize.transaction();
@@ -184,10 +170,7 @@ const deleteExpense = async (req, res) => {
 };
 
 
-// =========================
 // UPDATE EXPENSE
-// =========================
-
 const updateExpense = async (req, res) => {
 
     const transaction = await sequelize.transaction();
@@ -196,12 +179,7 @@ const updateExpense = async (req, res) => {
 
         const { id } = req.params;
 
-        const {
-            amount,
-            description,
-            category
-        } = req.body;
-
+        const {amount, description, category} = req.body;
 
         // Find old expense
         const oldExpense = await Expense.findOne({
@@ -250,9 +228,7 @@ const updateExpense = async (req, res) => {
 
 
         // Calculate difference
-        const difference =
-            parseFloat(amount) - parseFloat(oldExpense.amount);
-
+        const difference = parseFloat(amount) - parseFloat(oldExpense.amount);
 
         // Update user's total expenses
         await User.increment('totalExpenses', {
@@ -292,11 +268,7 @@ const updateExpense = async (req, res) => {
     }
 };
 
-
-// =========================
 // EXPORT CONTROLLERS
-// =========================
-
 module.exports = {
 
     addExpense,

@@ -5,11 +5,7 @@ const sequelize = require('../utils/db-connection');
 const path = require('path');
 
 
-// ===============================
 // POST request - Signup
-// Transaction
-// ===============================
-
 const userSignUp = async (req, res) => {
 
     const transaction = await sequelize.transaction();
@@ -18,17 +14,10 @@ const userSignUp = async (req, res) => {
 
         console.log("Request body:", req.body);
 
-        const {
-            name,
-            email,
-            password
-        } = req.body;
+        const {name, email, password} = req.body;
 
 
-        // ===============================
         // Check if email already exists
-        // ===============================
-
         const existingUser = await User.findOne({
 
             where: {
@@ -50,18 +39,11 @@ const userSignUp = async (req, res) => {
         }
 
 
-        // ===============================
         // Hash password
-        // ===============================
-
-        const hashedPassword =
-            await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(password, 10);
 
 
-        // ===============================
         // Create user
-        // ===============================
-
         const user = await User.create(
 
             {
@@ -81,17 +63,12 @@ const userSignUp = async (req, res) => {
         console.log("User created:", user);
 
 
-        // ===============================
         // Commit transaction
-        // ===============================
-
         await transaction.commit();
 
 
-        // ===============================
+   
         // Send response
-        // ===============================
-
         return res.status(201).json({
 
             id: user.id,
@@ -107,17 +84,11 @@ const userSignUp = async (req, res) => {
 
     } catch (error) {
 
-        // ===============================
         // Rollback transaction
-        // ===============================
-
         await transaction.rollback();
 
 
-        console.error(
-            "Error creating user:",
-            error
-        );
+        console.error("Error creating user:",error);
 
 
         return res.status(500).json({
@@ -129,39 +100,23 @@ const userSignUp = async (req, res) => {
 };
 
 
-// ===============================
-// GET request - Signup Page
-// No transaction
-// ===============================
 
+// GET request - Signup Page
 const getUserSignUp = async (req, res) => {
 
     try {
 
         return res.sendFile(
-            path.join(
-                __dirname,
-                "../../Frontend/signUpForm.html"
-            )
+            path.join(__dirname,"../../Frontend/signUpForm.html")
         );
 
     } catch (error) {
 
-        console.error(
-            "Error loading signup page:",
-            error
-        );
+        console.error("Error loading signup page:",error);
 
-        return res.status(500).json({
-            error: "Unable to load signup page"
-        });
     }
 };
 
-
-// ===============================
-// EXPORT
-// ===============================
 
 module.exports = {
 
