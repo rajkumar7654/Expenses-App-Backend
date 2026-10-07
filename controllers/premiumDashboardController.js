@@ -4,6 +4,7 @@ const User = require('../models/signUpModel');
 const sequelize = require('../utils/db-connection');
 const path = require('path');
 const { suggestCategory } = require('../services/aiService');
+const { downloadReport: generatePDF } = require('../services/downloadReportDesign');
 
 
 // ===============================
@@ -413,6 +414,10 @@ const getLeaderboard = async (req, res) => {
     }
 };
 
+const downloadReport = async (req, res) => {
+    await generatePDF(req, res, User, Expense);
+};
+
 
 // ===============================
 // EXPORT
@@ -430,7 +435,9 @@ module.exports = {
 
     deleteExpense,
 
-    getLeaderboard
+    getLeaderboard,
+
+    downloadReport
 
 };
 

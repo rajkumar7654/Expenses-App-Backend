@@ -32,5 +32,7 @@ router.delete('/expense/:id', authMiddleware, premiumAuthMiddleware, premiumDash
 // Leaderboard
 router.get('/leaderboard', authMiddleware, premiumAuthMiddleware, premiumDashboardController.getLeaderboard);
 
+// Download Report
+router.get('/download-report', authMiddleware, premiumAuthMiddleware, premiumDashboardController.downloadReport);
 
 module.exports = router;

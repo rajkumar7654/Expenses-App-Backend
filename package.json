@@ -18,6 +18,7 @@
     "http": "^0.0.1-security",
     "jsonwebtoken": "^9.0.3",
     "mysql2": "^3.24.4",
+    "pdfkit": "^0.20.2",
     "sequelize": "^6.37.8",
     "sib-api-v3-sdk": "^8.5.0",
     "uuid": "^14.0.2"
