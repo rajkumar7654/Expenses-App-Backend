@@ -14,15 +14,11 @@ const path = require('path');
 
 const cors = require('cors');
 
-//Associations
-const { User, Expense } = require('./associations/associations');
-User.hasMany(Expense);
-Expense.belongsTo(User);
-
-
 const loginRoute = require('./routes/loginRoute');
 
 const signUpRoute = require('./routes/signUpRoute');
+
+const forgetPasswordRoute = require('./routes/forgetPasswordRoute');
 
 const dashboardRoute = require('./routes/dashboardRoute');
 
@@ -33,6 +29,8 @@ const premiumDashboardRoute = require('./routes/premiumDashboardRoute');
 //data base 
 
 const sequelize = require('./utils/db-connection');
+const User = require('./models/signUpModel');
+const Expense = require('./models/dashboardModel');
 
 
 
@@ -44,13 +42,9 @@ app.use(express.json());
 
 app.use(express.static(path.join(__dirname, '../Frontend')));
 
-
-
 // Import associations
 
-require("./models/userAndExpensesAssociation.js");
-
-
+require("./associations/associations.js");
 
 //SignUp routes
 
@@ -65,10 +59,10 @@ app.use('/payment', paymentRoute);
 
 
 //Login routes
-
-
-
 app.use('/user', loginRoute);
+
+//Forget password routes
+app.use('/password', forgetPasswordRoute);
 
 
 
