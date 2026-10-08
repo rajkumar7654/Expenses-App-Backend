@@ -32,7 +32,7 @@ const userForgetPassword = async (req, res) => {
             isActive: true
         });
 
-        const resetUrl = `http://localhost:3000/password/resetpassword/${forgotPasswordRequest.id}`;
+        const resetUrl = `http://localhost:3000/forgetpassword/resetpassword/${forgotPasswordRequest.id}`;
 
         const defaultClient = SibApiV3Sdk.ApiClient.instance;
         const apiKey = defaultClient.authentications['api-key'];
@@ -64,7 +64,8 @@ const userForgetPassword = async (req, res) => {
         res.status(200).json({ message: 'Password reset email sent successfully', requestId: forgotPasswordRequest.id });
     } catch (error) {
         console.error('Error sending password reset email:', error);
-        res.status(500).json({ message: 'Error sending email', error: error.message });
+        console.error('Error details:', error.response ? error.response.body : error.message);
+        res.status(500).json({ message: 'Error sending email. Please check your API key configuration.', error: error.message });
     }
 };
 

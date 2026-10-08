@@ -62,7 +62,7 @@ app.use('/payment', paymentRoute);
 app.use('/user', loginRoute);
 
 //Forget password routes
-app.use('/password', forgetPasswordRoute);
+app.use('/forgetpassword', forgetPasswordRoute);
 
 
 
